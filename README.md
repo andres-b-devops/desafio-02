@@ -23,18 +23,18 @@ El presente documento muestra los pasos detallados para la implementación de un
 
 ## 1. Introducción
 
-Este proyecto tiene como objetivo realizar una **prueba de concepto para crear un CI/CD de Node.js**  mediante el uso de Jenkins con un *pipeline bultibranch*. Este pipeline se debe ejecutar cuando en el repositorio del proyecto se detecte un ***Push*** o un ***Pull Request***. El proyecto de Node.js cuenta con una prueba integrada hecha con la herramienta Jest la cuál también se ejecutará en el pipeline.
+Este proyecto tiene como objetivo realizar una **prueba de concepto para crear un CI/CD de un proyecto en Node.js**  mediante el uso de Jenkins con un *pipeline bultibranch*. Este pipeline se debe ejecutar cuando en el repositorio del proyecto se detecte un ***Push*** o un ***Pull Request***. El proyecto de Node.js cuenta con una prueba integrada hecha con la herramienta Jest la cuál también se ejecutará en el pipeline.
 
-Lo anterior se ejecutará con la ayuda de un Webhook en GitHub el cuál tendrá configurado la url hacia el sistema Jenkins (el cuál será expuesto por Ngrok)
+Lo anterior se ejecutará con la ayuda de un Webhook en GitHub que tendrá configurado la url hacia el sistema Jenkins (el cuál será expuesto por `Ngrok`)
 
 
 ### Características:
 
 #### Job multibranch para build de Node.js
 
-- ✅ Se añadirá el repositorio donde se encuentra el archivo: Jenkinsfile
+- ✅ Se añadirá el repositorio donde se encuentra el proyecto de Node.js y el archivo: Jenkinsfile
 - ✅ Se añadirá las credenciales para acceder al repositorio (token de GitHub)
-- ✅ Se establecerá cuál carpeta tiene el archivo: Jenkinsfile
+- ✅ Se establecerá cuál directorio tiene el archivo 'Jenkinsfile'
 
 ---
 #### Diagrama de alto nivel para el la ejecución automática de un Build de Node.js usando Webhook en GitHub:
@@ -72,7 +72,7 @@ curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
 ```bash
 ngrok config add-authtoken 2xxxxxxxxxxxxxxxxx_xxxxxxxxxxxxxxxxx
 ```
-- **3.4 Desplegar el servicio Jenkinks (puerto8080) en Ngrok**: OJO se debe seleccionar Static Domain para que genere una url estática (para este caso generó: ```https://factual-elegant-parrot.ngrok-free.app```)
+- **3.4 Desplegar el servicio Jenkins (puerto8080) en Ngrok**: OJO se debe seleccionar Static Domain para que genere una url estática (para este caso generó: ```https://factual-elegant-parrot.ngrok-free.app```)
 ```bash
 ngrok http --url=factual-elegant-parrot.ngrok-free.app 8080
 ```
@@ -128,23 +128,27 @@ En la sección de configuración del pipeline agregar lo siguiente
   Luego se debe dar click en el botón "Validate" y debe mostrar que las credenciales están ok:  `Credentials ok. Connected to https://github.com/andres-b-devops/nodejs-helloworld-api-desafio`
 
 - Las demás secciones como ***Behaviours*** se deben dejar sin modificar
-- En la sección ***Build Configurations***, en Mode se debe seleccioar `by Jenkinsfile`
+- En la sección ***Build Configurations***, en Mode se debe seleccionar `by Jenkinsfile`
 - En **Script Path** se debe poner la ruta hacia el directorio del repositorio en donde se encuentra el archivo 'Jenkinsfile', para este caso como no se encuentra dentro de ningún directorio dentro del repositorio se deja tal cual: `Jenkinsfile`. Click en botón `Save`
 
 #### Paso 3: Ejecutar el Job
-Después de haber presionado click en el botón `Save` del paso anterior, Jenkins empezará a escanear el repositorio en busca de ramas (***branches***), luego ejecutará el job.  Si todo ha ido bien, mostrará un símbolo de aprobación en color verde.  Se puede validar también dando click en ese item que dice "main", esto llevará a otra página, ahí se debe buscar en el panel izquierdo, donde dice "Builds" y de ahí dar click en donde dice "#1" luego en "Console Output", debería mostrar todo el log de ejecución donde está la respuesta del test de Jest del proyecto.
+Después de haber presionado click en el botón `Save` del paso anterior, Jenkins empezará a escanear el repositorio en busca de ramas (***branches***), luego ejecutará el job. Se debe dar click en el botón Status, si todo ha ido bien, mostrará un símbolo de aprobación en color verde.  Se puede validar también dando click en ese item que muestra la rama en la que se ejecutó, para este caso es la rama "main", esto llevará a otra página, ahí se debe buscar en el panel izquierdo, donde dice "Builds" y de ahí dar click en donde dice "#1" luego en "Console Output", debería mostrar todo el log de ejecución donde está la respuesta del test de Jest del proyecto.
 
 #### Paso 4: Ejecutar el Job con un PUSH
-Dentro del repositorio se debe crear una rama llamada 'feature-1' a partir de la rama 'main', esto con el propósito de simular un nuevo feature que se creará y luego se hará un pull request. Ya en la rama 'feature-1' se puede modificar algún archivo y hacer el respectivo commit y push, con esto se ejecutará automáticamente el Job. Para este ejemplo se modificará el archivo README.md y el commit tendrá este mensaje 'Modificado para un PUSH'.
+Dentro del repositorio se debe crear una rama llamada 'feature-1' a partir de la rama 'main', esto con el propósito de simular un nuevo feature que se creará y luego se hará un pull request. Después de crear esa rama se entraá en esta, se puede modificar algún archivo y hacer el respectivo commit y push, con esto se ejecutará automáticamente el Job. Para este ejemplo se modificará el archivo README.md y el commit tendrá este mensaje 'Modificado para un PUSH'.
 
 #### Paso 4.1: Verificación de ejecución con el PUSH:
 En Jenkins, en la página del Pipeline Multibranch se puede apreciar como se ha creado la nueva rama 'feature-1' y además se encuentra ejecutándose automáticamente el Job (debido al push anterior).    Si todo ha ido bien, mostrará un símbolo de aprobación en color verde.  Se puede validar también dando click en ese item que dice "feature-1", esto llevará a otra página, ahí se debe buscar en el panel izquierdo, donde dice "Builds" y de ahí dar click en donde dice "#1" luego en "Console Output", debería mostrar todo el log de ejecución, se puede apreciar que muestra el mensaje del commit: `Modificado para un PUSH`, más abajo muestra el contenido del log de la respuesta del test de Jest del proyecto.
 
+Otra forma de verificarlo es mirando en la página de GitHub el log que se genera en el webhook, debe mostrar satisfactoriamente en verde el evneto del `push`. Si se ingresa se puede ver en el payload la referencia a la rama:  `"ref": "refs/heads/feature-1"`
+
 #### Paso 5: Ejecutar el Job con un PULL REQUEST
-En la página principal del repositorio de GitHub, se puede apreciar que en la parte superior aparece en color amarillo: '**feature-1** had recent pushes 1 minute ago', al lado derecho en un botón color verde dice: `Compare & pull request`, se debe dar click ahí, esto llevará a otra página que permitirá crear el Pull Request. Ahí aparece como título el que se generó en el commit anterior 'Modificado para un PUSH', se debe agregar la siguiente descripción: 'Realizando un PULL REQUEST', de ahí dar click en el botón `Create pull request`, de ahí click en el botón `Merge pull request`, de ahí click en `Confirm merge`.
+En la página principal del repositorio de GitHub, se puede apreciar que en la parte superior aparece en color amarillo: '**feature-1** had recent pushes 1 minute ago', al lado derecho en un botón color verde dice: `Compare & pull request`, se debe dar click ahí, esto llevará a otra página que permitirá crear el Pull Request. Ahí aparece como título el que se generó en el commit anterior 'Modificado para un PUSH', se debe agregar la siguiente descripción: 'Realizando un PULL REQUEST', de ahí dar click en el botón `Create pull request` (esto disparará el webhook en el evento `pull_request.opened`)
+Luego se debe dar click en el botón `Merge pull request`, de ahí click en `Confirm merge`.
 
 #### Paso 5.1: Verificación de ejecución con un PULL REQUEST:
 En Jenkins, en la página del Pipeline Multibranch dar click en 'feature-1', esto llevará a otra página, ahí en el panel izquierdo en la sección "Builds" se puede apreciar que aparece '#2', ahí dar click en "Console Output", debería mostrar todo el log de ejecución, se puede apreciar que muestra el mensaje `Merge pull request #3 from andres-b-devops/feature-1` más abajo muestra el contenido del log de la respuesta del test de Jest del proyecto.
 
 También se puede apreciar que en Jenkins, en la página del Pipeline Multibranch, apareceió en la pestalla "Pull Requests" un item con este nombre "Modificado para un PUSH (#3)"
 
+Otra forma de verificarlo es mirando en la página de GitHub el log que se genera en el webhook, debe mostrar satisfactoriamente en verde 2 eventos: que se abrió (opened) y cerró (closed) dicho Pull Request. Si se ingresa en cada uno se puede ver la respuesta de Jenkins
