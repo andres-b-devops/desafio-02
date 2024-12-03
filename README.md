@@ -30,7 +30,7 @@ Lo anterior se ejecutará con la ayuda de un Webhook en GitHub que tendrá confi
 
 ### Características:
 
-#### Job multibranch para build de Node.js
+#### Job para build de Node.js
 
 - ✅ Se añadirá el repositorio donde se encuentra el proyecto de Node.js y el archivo: Jenkinsfile
 - ✅ Se añadirá las credenciales para acceder al repositorio (token de GitHub)
